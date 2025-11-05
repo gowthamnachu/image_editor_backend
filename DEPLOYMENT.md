@@ -1,6 +1,92 @@
 # Backend Deployment Guide
 
-## Vercel Deployment
+⚠️ **Important: Vercel has size limitations (250MB) and may not work with OpenCV + Mediapipe.**
+
+**Recommended platforms: Render.com (Free tier) or Railway.app**
+
+---
+
+## Option 1: Render.com (RECOMMENDED - Free Tier Available)
+
+### Prerequisites
+- Render account (sign up at render.com)
+- GitHub account with your code pushed
+
+### Deployment Steps
+
+1. **Push your code to GitHub**
+   ```bash
+   cd backend
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin YOUR_GITHUB_REPO_URL
+   git push -u origin main
+   ```
+
+2. **Create Web Service on Render**
+   - Go to https://dashboard.render.com/
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Select the backend directory (if monorepo)
+
+3. **Configure Build Settings**
+   - **Name:** image-editor-backend
+   - **Environment:** Python 3
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type:** Free
+
+4. **Deploy**
+   - Click "Create Web Service"
+   - Wait 5-10 minutes for the build to complete
+   - Copy your deployment URL: `https://your-app.onrender.com`
+
+### Testing
+```bash
+curl https://your-app.onrender.com/api/health
+```
+
+---
+
+## Option 2: Railway.app (RECOMMENDED - $5 credit free)
+
+### Prerequisites
+- Railway account (sign up at railway.app)
+- Railway CLI installed: `npm install -g @railway/cli`
+
+### Deployment Steps
+
+1. **Login to Railway**
+   ```bash
+   railway login
+   ```
+
+2. **Initialize and deploy**
+   ```bash
+   cd backend
+   railway init
+   railway up
+   ```
+
+3. **Add domain**
+   ```bash
+   railway domain
+   ```
+
+4. **Set environment variables (if needed)**
+   ```bash
+   railway variables set PYTHONUNBUFFERED=1
+   ```
+
+### Testing
+```bash
+curl https://your-app.railway.app/api/health
+```
+
+---
+
+## Option 3: Vercel (May hit size limits - NOT RECOMMENDED)
 
 ### Prerequisites
 - Vercel account (sign up at vercel.com)
@@ -19,69 +105,78 @@
    vercel
    ```
 
-3. **Follow the prompts:**
-   - Set up and deploy? Yes
-   - Which scope? Select your account
-   - Link to existing project? No
-   - What's your project's name? (e.g., image-editor-backend)
-   - In which directory is your code located? ./
-   - Want to override settings? No
+3. **Follow the prompts**
 
-4. **Get your deployment URL**
-   - After deployment, you'll get a URL like: `https://your-project.vercel.app`
-   - Copy this URL - you'll need it for the frontend configuration
+⚠️ **Warning:** Vercel has a 250MB uncompressed size limit. OpenCV and Mediapipe together exceed this. If deployment fails, use Render or Railway instead.
 
-5. **Set up custom domain (optional)**
-   - Go to your project settings in Vercel dashboard
-   - Add your custom domain
+---
 
-### Important Notes
+## Option 4: Heroku
 
-⚠️ **Vercel Limitations for this project:**
-- Vercel has a 50MB deployment size limit
-- OpenCV and Mediapipe libraries are large (>50MB)
-- **Alternative: Deploy to Railway, Render, or Heroku instead**
+### Prerequisites
+- Heroku account
+- Heroku CLI installed
 
-### Alternative: Railway Deployment (Recommended)
+### Deployment Steps
 
-1. **Install Railway CLI**
+1. **Login to Heroku**
    ```bash
-   npm install -g @railway/cli
+   heroku login
    ```
 
-2. **Login and deploy**
+2. **Create app**
    ```bash
    cd backend
-   railway login
-   railway init
-   railway up
+   heroku create your-app-name
    ```
 
-3. **Set environment variables** (if needed)
+3. **Deploy**
    ```bash
-   railway variables set PYTHONUNBUFFERED=1
+   git init
+   git add .
+   git commit -m "Deploy"
+   git push heroku main
    ```
 
-### Alternative: Render Deployment (Recommended)
+4. **Open app**
+   ```bash
+   heroku open
+   ```
 
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Use these settings:
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Environment:** Python 3
+---
 
-### Environment Variables
-No environment variables required for basic setup.
+## After Backend Deployment
 
-### Testing
-After deployment, test the API:
-```bash
-curl https://your-backend-url.com/api/health
-```
+Once your backend is deployed, you'll get a URL like:
+- Render: `https://your-app.onrender.com`
+- Railway: `https://your-app.railway.app`
+- Heroku: `https://your-app.herokuapp.com`
+
+**Copy this URL** - you'll need it to configure the frontend!
+
+---
 
 ## Troubleshooting
 
-- If you get size errors with Vercel, use Railway or Render instead
-- Check logs: `vercel logs` or in the platform dashboard
-- Ensure all dependencies are in requirements.txt
+### Build Fails - Size Limit
+**Solution:** Use Render or Railway instead of Vercel
+
+### Import Errors
+**Solution:** Ensure all files are committed and .vercelignore doesn't exclude necessary files
+
+### CORS Errors
+**Solution:** Update `allow_origins` in `app/main.py` with your frontend URL
+
+### Cold Starts (Free Tier)
+Free tier services may sleep after inactivity. First request takes 30-60 seconds.
+
+---
+
+## Environment Variables
+No environment variables required for basic setup.
+
+## Performance Notes
+- First request may be slow (cold start on free tier)
+- Render/Railway free tiers sleep after 15 minutes of inactivity
+- Consider upgrading to paid tier for production use
+
