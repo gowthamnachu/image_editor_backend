@@ -45,7 +45,12 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=[
+        "https://image-editor-ai.netlify.app",  # Production Netlify frontend
+        "http://localhost:3000",  # Local development
+        "http://localhost:5173",  # Vite dev server
+        "*"  # Allow all origins (can remove in production for security)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
